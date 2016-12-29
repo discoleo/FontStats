@@ -11,4 +11,7 @@ These statistics include:
 Samples using these fonts are then displayed in a table and the samples can be sorted using the computed statistics/metrics.
 
 TODO:
-- add more statistics / metrics
+- add more statistics / metrics: e.g. median/quantiles for the different metrics
+- option to process multiple lines of sample text: (String [] or auto-split after some specific length)
+- option to use Font kerning
+- optimize font normalization and add more options (if useful)
