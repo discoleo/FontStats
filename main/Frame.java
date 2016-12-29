@@ -50,9 +50,12 @@ public class Frame extends JPanel {
 		final FontListObj fonts = new FontListObj();
 		final FontStat stat = new FontStat();
 		
-		for(Font font : fonts) {
-			stat.Stats(font.deriveFont(20.0f));
-		}
+		//for(Font font : fonts) {
+		//	stat.Stats(font.deriveFont(20.0f));
+		//}
+		// parallel processing
+		fonts.parallelStream().forEach(
+				(font) -> {stat.Stats(font.deriveFont(20.0f));} );
 		
 		// +++ View
 		// Table
@@ -108,14 +111,17 @@ public class Frame extends JPanel {
 	
 	// ++++ helper Classes ++++
 	public class FontTblModel extends DefaultTableModel {
-		final int nCol;
+		final int nFontCol;
 		final Class<?> specialCl;
+		final int [] nBoolCol;
 		
 		public FontTblModel(final FontStatMap stat, final int nCol, final Class<?> cl) {
 			this.setColumnIdentifiers(FontStatObj.GetNames());
 			final int nColumnCount = this.getColumnCount();
-			this.nCol = nCol;
+			this.nFontCol = nCol;
 			this.specialCl = cl;
+			
+			this.nBoolCol =  FontStatObj.GetBooleanColumns();
 			
 			// Set Table data
 			int nRow = 1;
@@ -134,8 +140,14 @@ public class Frame extends JPanel {
 		
 	    @Override
 	    public Class<?> getColumnClass(final int nCol) {
-	    	if(this.nCol == nCol) {
+	    	if(this.nFontCol == nCol) {
 	    		return specialCl;
+	    	} else {
+	    		for(int npos : nBoolCol) {
+	    			if(nCol == npos) {
+	    				return Boolean.class;
+	    			}
+	    		}
 	    	}
 			return super.getColumnClass(nCol);
 	    }
