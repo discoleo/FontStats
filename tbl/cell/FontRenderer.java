@@ -13,24 +13,34 @@ import tbl.gui.ColorMap.CLASSCOLOURS;
 
 public class FontRenderer extends JLabel implements TableCellRenderer {
 	
-	private static String text;
+	private static final long serialVersionUID = -3527768182350049274L;
+
+	protected static String text;
 	
 	private static final ColorMap colours = ColorMap.GetThis();
 	
 	// ++++++++++++++++ CONSTRUCTOR ++++++++++++++++++
 	
 	public FontRenderer() {
-		text = "Sample";
+		this("Sample");
+	}
+	public FontRenderer(final String sample) {
+		text = sample;
 	}
 	
 	// +++++++++++++ MEMBER FUNCTIONS ++++++++++++++++
 	
+	// +++ SET
+	public void SetText(final String sample) {
+		text = sample;
+	}
+	
 	@Override
 	public Component getTableCellRendererComponent(
 			final JTable table, final Object obj,
-			final boolean isSelected, final boolean hasFocus, int nRow, int nCol) {
+			final boolean isSelected, final boolean hasFocus, final int nRow, final int nCol) {
 		if(obj == null) {
-			// NO Date
+			// NO DATA
 			this.setText("");
 			this.SetBackground(isSelected);
 			return this;
@@ -39,6 +49,7 @@ public class FontRenderer extends JLabel implements TableCellRenderer {
 		final Font font;
 		if( ! obj.getClass().equals(Font.class)) {
 			this.setText(obj.toString());
+			// TODO: default Font (to prevent reuse of last Font)
 			return this;
 		} else {
 			font = (Font) obj;
