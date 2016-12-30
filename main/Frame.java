@@ -48,7 +48,7 @@ public class Frame extends JPanel {
 	
 	public Frame() {
 		final FontListObj fonts = new FontListObj();
-		final FontStat stat = new FontStat();
+		final FontStat stat = new FontStat("LibreOffice");
 		
 		//for(Font font : fonts) {
 		//	stat.Stats(font.deriveFont(20.0f));
@@ -59,7 +59,7 @@ public class Frame extends JPanel {
 		
 		// +++ View
 		// Table
-		final JTable table = CreateTable(stat.GetStat());
+		final JTable table = CreateTable(stat.GetStat(), stat.GetText());
 
 		final JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setPreferredSize(this.GetLargeTableSize());
@@ -68,12 +68,12 @@ public class Frame extends JPanel {
 		//this.add(table);
 	}
 	
-	protected JTable CreateTable(final FontStatMap fontStat) {
+	protected JTable CreateTable(final FontStatMap fontStat, final String sample) {
 		final int nCol = 2; // hardcoded
 		final FontTblModel model = new FontTblModel(fontStat, nCol, Font.class);
 		final JTable table = new JTable(model);
 		// Set Special Column
-		table.setDefaultRenderer(Font.class, new FontRenderer());
+		table.setDefaultRenderer(Font.class, new FontRenderer(sample));
 		// Customize table
 		table.setRowHeight(config.GetTblCellMinHeight());
 		table.setRowSorter(this.GetNewSorter(model));
