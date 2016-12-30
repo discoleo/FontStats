@@ -32,14 +32,14 @@ public class FontStat {
 	private final static String txtDefault = "Sample"; // "And This is a sample";
 	private final String text;
 	
-	private final FONTNORMALIZE doNorm = FONTNORMALIZE.HMAX;
+	private final FONTNORMALIZE doNorm = FONTNORMALIZE.WTOT;
 	
 	private BufferedImage [] img = null;
 	private int current = -1;
 	private boolean isAll = false;
 	
 	private boolean [] usageMap = new boolean [MAX_IMAGES];
-	private int count_recursions = 0;
+	//private int count_recursions = 0;
 	
 	private final Semaphore lock;
 	
@@ -47,6 +47,8 @@ public class FontStat {
 	
 	public FontStat() {
 		this(TblDimensions.GetThis().GetTblFont().getSize(), txtDefault);
+	}public FontStat(final String text) {
+		this(TblDimensions.GetThis().GetTblFont().getSize(), text);
 	}
 	public FontStat(final int size, final String text) {
 		this.text = text;
@@ -84,7 +86,7 @@ public class FontStat {
 	public void Stats(final Font font) {
 		try {
 			final int nImg = this.GetLock();
-			this.Stats(font, nImg);
+			this.Stats(font, nImg, 0);
 			usageMap[nImg] = false;
 			lock.release();
 			// System.out.println("Semaphore was = " + nImg);
@@ -93,7 +95,7 @@ public class FontStat {
 			e.printStackTrace();
 		}
 	}
-	public void Stats(final Font font, final int nImg) {
+	private void Stats(final Font font, final int nImg, final int countRecursions) {
 		this.ClearImg(nImg);
 		// Graphics
 		final Graphics gr = img[nImg].getGraphics();
@@ -195,29 +197,32 @@ public class FontStat {
 		// NORMALIZATION
 		// could use any of the other metrics for Normalization
 		// TODO: set limits based on Font-size (are also text-dependent)
-		if( (doNorm.equals(FONTNORMALIZE.HMAX) && (diffY < 13 || diffY > 14) ) ) {
-			final float scH = font.getSize2D() * 14 / diffY;
-			this.Stats(font.deriveFont(scH), nImg);
+		if(countRecursions >= 5) {
+			listStat.put(font, new FontStatObj(strong, countVLines, txtDim.E1, diffX, txtDim.E2, diffY, sumVLines));
 			return;
-		} else if( (doNorm.equals(FONTNORMALIZE.HMAXINT) && (diffY < 13 || diffY > 15) )
-				) {
+		} else if( doNorm.equals(FONTNORMALIZE.HMAX) && (diffY < 13 || diffY > 14) ) {
+			final float scH = font.getSize2D() * 14 / diffY;
+			this.Stats(font.deriveFont(scH), nImg, countRecursions + 1);
+			return;
+		} else if( doNorm.equals(FONTNORMALIZE.HMAXINT) && (diffY < 13 || diffY > 15) ) {
 			// int follows more closely natural sizes, BUT may create an infinite recursion
-			final float scH = Math.round(font.getSize2D() * 14 / diffY);
-			this.Stats(font.deriveFont(scH), nImg);
+			final float scale = Math.round(font.getSize2D() * 14 / diffY);
+			this.Stats(font.deriveFont(scale), nImg, countRecursions + 1);
 			return;
 		} else if( doNorm.equals(FONTNORMALIZE.HTOT) && (txtDim.E2 < 17 || txtDim.E2 > 20) ) {
-			final float scH = font.getSize2D() * 19 / txtDim.E2;
-			this.Stats(font.deriveFont(scH), nImg);
+			final float scale = font.getSize2D() * 19 / txtDim.E2;
+			this.Stats(font.deriveFont(scale), nImg, countRecursions + 1);
 			return;
-		} else if( doNorm.equals(FONTNORMALIZE.WTOT) && (txtDim.E1 < 62 || txtDim.E1 > 67) ) {
-			final float scH = font.getSize2D() * 65 / txtDim.E1;
+		} else if( doNorm.equals(FONTNORMALIZE.WTOT) && (txtDim.E1 < 82 || txtDim.E1 > 87) ) {
+			// TODO: limits are dependent on LENGTH of String
+			final float scale = font.getSize2D() * 85 / txtDim.E1;
 			// System.out.println("Font dim: " + txtDim.E1 + " " + font.getName());
-			this.Stats(font.deriveFont(scH), nImg);
+			this.Stats(font.deriveFont(scale), nImg, countRecursions + 1);
 			return;
 		} else if( doNorm.equals(FONTNORMALIZE.WTOTINT) && (txtDim.E1 < 61 || txtDim.E1 > 69) ) {
-			final float scH = Math.round(font.getSize2D() * 65 / txtDim.E1);
+			final float scale = Math.round(font.getSize2D() * 65 / txtDim.E1);
 			// System.out.println("Font dim: " + txtDim.E1 + " " + font.getName());
-			this.Stats(font.deriveFont(scH), nImg);
+			this.Stats(font.deriveFont(scale), nImg, countRecursions + 1);
 			return;
 		} else if( doNorm.equals(FONTNORMALIZE.STRONG) ) {
 			// NOTE: is NOT as useful as initially planned
@@ -225,15 +230,9 @@ public class FontStat {
 			if(percStrong < 5 || percStrong > 7) {
 				// size = (current_size + new_size) / 2
 				final float scale = font.getSize2D() * (0.5f + (float) Math.sqrt(1.5f / percStrong));
-				System.out.println("Font dim: " + percStrong + " " + font.getName() +
-						" " + font.getSize2D() + " " + scale);
-				count_recursions++;
-				if(count_recursions > 5) {
-					count_recursions = 0;
-					listStat.put(font, new FontStatObj(strong, countVLines, txtDim.E1, diffX, txtDim.E2, diffY, sumVLines));
-					return;
-				}
-				this.Stats(font.deriveFont(scale), nImg);
+				//System.out.println("Font dim: " + percStrong + " " + font.getName() +
+				//		" " + font.getSize2D() + " " + scale);
+				this.Stats(font.deriveFont(scale), nImg, countRecursions + 1);
 				return;
 			}
 		}
